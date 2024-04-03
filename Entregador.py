@@ -17,9 +17,7 @@ class Entregador(State):
         self.direcao = direcao # direção pra onde o entregador está olhando
         self.encomenda = encomenda # boleano pra indicar se pegou a encomenda
         self.pessoa = pessoa # boleano pra indicar se entregou a encomenda
-        print(self.pos)
-        print(self.pos_encomenda)
-    
+        
 
     def successors(self):
         successors = []

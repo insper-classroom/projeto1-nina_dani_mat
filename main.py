@@ -9,7 +9,7 @@ with open('Mapa1.json', 'r') as arquivo:
     while len(mapa[2]) > 0:
         resultados = []
 
-        for i in range(len(mapa[2])):    
+        for i in range(len(mapa[2])):  
             state = Entregador("", mapa[0], mapa[1], mapa[2][i][0], mapa[3][i], mapa[4], "dir", False, False)
             algoritimo = AEstrela()
             result = algoritimo.search(state, trace=False, pruning="general")
@@ -31,12 +31,14 @@ with open('Mapa1.json', 'r') as arquivo:
                 menor_custo = resultado[1]
                 indice = resultados.index(resultado)
 
-        print(f"O cliente {indice} será atendido")
-        mapa[1] = mapa[2][indice]
+        print(f"O cliente {resultados[indice][2]} será atendido")
+    
+        mapa[1] = mapa[2][indice][0]
         mapa[2].pop(indice)
         mapa[3].pop(indice)
-        print(mapa[2])
+       
 
+    
 
 
 
