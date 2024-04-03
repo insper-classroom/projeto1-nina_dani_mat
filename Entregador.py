@@ -76,18 +76,5 @@ class Entregador(State):
             distancia = abs(self.pos[0] - self.pos_pessoa[0] ) + abs(self.pos[1] - self.pos_pessoa[1])
         return distancia
     
-def main():
-    with open('Mapa1.json', 'r') as arquivo:
-        mapa = json.load(arquivo)
 
-    state = Entregador("", mapa[0], mapa[1], mapa[2], mapa[3], mapa[4], "dir", False, False)
-    algoritimo = AEstrela()
-    result = algoritimo.search(state, trace=True, pruning="general")
-    if result != None:
-        print(result.show_path())
-        print(result.g)
-    else:
-        print("não achou solução")
-
-main()
 
