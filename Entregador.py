@@ -4,6 +4,7 @@ from aigyminsper.search.SearchAlgorithms import BuscaGananciosa
 from aigyminsper.search.SearchAlgorithms import BuscaLargura
 from aigyminsper.search.SearchAlgorithms import AEstrela
 from aigyminsper.search.Graph import State
+import json
 
 class Entregador(State):
     def __init__(self, op: str, tamanho: list, pos: list, pos_pessoa: list, pos_encomenda: list, pos_obstaculos: list, direcao: str, encomenda: bool, pessoa: bool):
@@ -76,14 +77,10 @@ class Entregador(State):
         return distancia
     
 def main():
-    obstaculos_1 = [[1,3],[2,3],[1,4],[2,4],[3,4],[1,5]]
-    obstaculos_2 = [[1,3],[2,3],[2,4],[3,4]]
-    obstaculos_3 = [[1,4],[2,4],[3,4],[4,2],[5,2],[6,2],[7,2],[8,2]]
-    obstaculos_4 = [[1,4],[2,4],[3,4],[3,5],[3,6],[4,2],[5,2],[7,2],[8,2],[9,2],[10,2],[7,3],[8,3],[6,4],[7,4],[8,4],[8,5],[9,5],[8,6],[9,6],[10,6]]
-    # state = Entregador("", [5,7], [1,1], [3,3], [1,6], obstaculos_1, "dir", False, False)
-    # state = Entregador("", [5,7], [1,1], [3,3], [1,6], obstaculos_2, "dir", False, False)
-    state = Entregador("", [8,4], [3,3], [8,4], [8,1], obstaculos_3, "dir", False, False)
-    # state = Entregador("", [10,7], [9,4], [6,3], [2,5], obstaculos_4, "dir", False, False)
+    with open('Mapa1.json', 'r') as arquivo:
+        mapa = json.load(arquivo)
+
+    state = Entregador("", mapa[0], mapa[1], mapa[2], mapa[3], mapa[4], "dir", False, False)
     algoritimo = AEstrela()
     result = algoritimo.search(state, trace=True, pruning="general")
     if result != None:
