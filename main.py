@@ -2,11 +2,15 @@ from Entregador import Entregador
 from aigyminsper.search.SearchAlgorithms import AEstrela
 import json
 
+class Solucao:
 
-with open('Mapa1.json', 'r') as arquivo:
-    mapa = json.load(arquivo)
-    
-    while len(mapa[2]) > 0:
+    def __init__(self, nome_arquivo: str) -> None:
+        self.nome_arquivo = nome_arquivo
+
+    def run(self):
+        with open(self.nome_arquivo, 'r') as arquivo:
+            mapa = json.load(arquivo)
+            
         resultados = []
 
         for i in range(len(mapa[2])):  
@@ -21,6 +25,7 @@ with open('Mapa1.json', 'r') as arquivo:
 
 
         menor_custo = float("inf")
+        self.resultados = resultados
         for resultado in resultados:
             if type(resultado) == tuple:
                 print(f"Custo para atender o cliente {resultado[2]}: {resultado[1]}")
@@ -30,16 +35,13 @@ with open('Mapa1.json', 'r') as arquivo:
             if resultado[1] < menor_custo:
                 menor_custo = resultado[1]
                 indice = resultados.index(resultado)
+                self.indice = indice
 
         print(f"O cliente {resultados[indice][2]} será atendido")
     
         mapa[1] = mapa[2][indice][0]
         mapa[2].pop(indice)
         mapa[3].pop(indice)
-       
 
-    
-
-
-
-
+# solucao = Solucao('Mapa1.json')
+# solucao.run()

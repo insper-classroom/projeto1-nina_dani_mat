@@ -1,9 +1,11 @@
 import pygame
 import json
+import threading
+from main import Solucao
 
 class Deliveryman(pygame.sprite.Sprite):
 
-    def __init__(self, x, y, grupos) -> None:
+    def __init__(self, x, y, grupos, nome_mapa) -> None:
         super().__init__()
         self.image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
         self.rect = self.image.get_rect()
@@ -12,6 +14,16 @@ class Deliveryman(pygame.sprite.Sprite):
         self.rect.y = (y - 1) * TAMANHO_BLOCO
         self.grupos = grupos
         self.grupos['all_sprites'].add(self)
+        self.caminho = None
+        self.nome_mapa = nome_mapa
+
+    def update(self) -> None:
+        if self.caminho == None:
+            solucao = Solucao(self.nome_mapa)
+            threading.Thread(target=solucao.run())
+            self.caminho = solucao.resultados[solucao.indice][0]
+        else:
+            print(self.caminho)
 
 class Cliente(pygame.sprite.Sprite):
 
@@ -49,14 +61,15 @@ BLACK = (0, 0, 0)
 WHITE = (255,255,255)
 
 grupos = {'all_sprites': pygame.sprite.Group()}
+nome_mapa = 'Mapa1.json'
 
-with open('Mapa1.json', 'r') as arquivo:
+with open(nome_mapa, 'r') as arquivo:
     mapa = json.load(arquivo)
 
 tamanho_mapa = mapa[0]
 
 #x é a coluna e y é a linha
-entregador = Deliveryman(mapa[1][1], mapa[1][0], grupos)
+entregador = Deliveryman(mapa[1][1], mapa[1][0], grupos, nome_mapa)
 
 for cliente in mapa[2]:
     Cliente(cliente[0], grupos)
@@ -74,6 +87,8 @@ while rodando:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             rodando = False
+
+    grupos['all_sprites'].update()
 
     # Controlar frame rate
     clock.tick(FPS)
