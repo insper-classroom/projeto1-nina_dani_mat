@@ -16,14 +16,67 @@ class Deliveryman(pygame.sprite.Sprite):
         self.grupos['all_sprites'].add(self)
         self.caminho = None
         self.nome_mapa = nome_mapa
+        self.direcao = 'direita'
 
     def update(self) -> None:
         if self.caminho == None:
-            solucao = Solucao(self.nome_mapa)
-            threading.Thread(target=solucao.run())
-            self.caminho = solucao.resultados[solucao.indice][0]
+            if len(mapa[2]) != 0:
+                self.solucao = Solucao(mapa)
+                threading.Thread(target=self.solucao.run())
+                self.caminho = self.solucao.resultados[self.solucao.indice][0].split(';')
         else:
-            print(self.caminho)
+            passo = self.caminho[0].strip()
+
+            if passo == 'ir pra frente':
+                if self.direcao == 'direita':
+                    self.rect.x += TAMANHO_BLOCO
+
+                elif self.direcao == 'esquerda':
+                    self.rect.x -= TAMANHO_BLOCO
+                
+                elif self.direcao == 'cima':
+                    self.rect.y -= TAMANHO_BLOCO
+                    
+                elif self.direcao == 'baixo':
+                    self.rect.y += TAMANHO_BLOCO
+
+            if passo == 'virar dir':
+                if self.direcao == 'direita':
+                    self.direcao = 'baixo'
+
+                elif self.direcao == 'esquerda':
+                    self.direcao = 'cima'
+                
+                elif self.direcao == 'cima':
+                    self.direcao = 'direita'
+                    
+                elif self.direcao == 'baixo':
+                    self.direcao = 'esquerda'
+
+            if passo == 'virar esq':
+                if self.direcao == 'direita':
+                    self.direcao = 'cima'
+
+                elif self.direcao == 'esquerda':
+                    self.direcao = 'baixo'
+                
+                elif self.direcao == 'cima':
+                    self.direcao = 'esquerda'
+                    
+                elif self.direcao == 'baixo':
+                    self.direcao = 'direita'
+
+            del self.caminho[0]
+
+            mapa[1] = [self.rect.y / TAMANHO_BLOCO + 1, self.rect.x / TAMANHO_BLOCO + 1]
+            print(mapa[1])
+
+            if len(self.caminho) == 0:
+                self.caminho = None 
+                del mapa[2][self.solucao.indice]
+                del mapa[3][self.solucao.indice]
+                self.direcao = 'direita'
+
 
 class Cliente(pygame.sprite.Sprite):
 
@@ -80,6 +133,7 @@ for encomenda in mapa[3]:
 # Tamanho da tela e definição do FPS
 screen = pygame.display.set_mode((tamanho_mapa[1] * TAMANHO_BLOCO, tamanho_mapa[0] * TAMANHO_BLOCO))
 clock = pygame.time.Clock()
+t = 0
 
 rodando = True
 while rodando:
@@ -88,10 +142,15 @@ while rodando:
         if event.type == pygame.QUIT:
             rodando = False
 
-    grupos['all_sprites'].update()
-
     # Controlar frame rate
     clock.tick(FPS)
+
+    if t >= 1:
+        grupos['all_sprites'].update()
+        t = 0
+
+    t += 1/FPS
+
 
     # Desenhar fundo
     screen.fill(BLACK)
