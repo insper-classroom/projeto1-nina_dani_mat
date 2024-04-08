@@ -7,18 +7,35 @@ class Deliveryman(pygame.sprite.Sprite):
 
     def __init__(self, x, y, grupos, nome_mapa) -> None:
         super().__init__()
-        self.image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+        self.imagem_direita = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+        self.imagem_baixo = pygame.transform.rotate(self.imagem_direita, -90)
+        self.imagem_esquerda = pygame.transform.flip(self.imagem_direita, True, False)
+        self.imagem_cima = pygame.transform.rotate(self.imagem_esquerda, -90)
+        self.image = self.imagem_direita
         self.rect = self.image.get_rect()
         #vou fazer o x e o y -1 pq no dicionario do mapa a posicao é em linha, coluna
         self.rect.x = (x - 1) * TAMANHO_BLOCO
         self.rect.y = (y - 1) * TAMANHO_BLOCO
         self.grupos = grupos
         self.grupos['all_sprites'].add(self)
+        self.grupos['entregadores'].add(self)
         self.caminho = None
         self.nome_mapa = nome_mapa
         self.direcao = 'direita'
 
     def update(self) -> None:
+        if self.direcao == 'direita':
+            self.image = self.imagem_direita
+        
+        if self.direcao == 'esquerda':
+            self.image = self.imagem_esquerda
+
+        if self.direcao == 'cima':
+            self.image = self.imagem_cima
+
+        if self.direcao == 'baixo':
+            self.image = self.imagem_baixo
+
         if self.caminho == None:
             if len(mapa[2]) != 0:
                 self.solucao = Solucao(mapa)
@@ -66,10 +83,15 @@ class Deliveryman(pygame.sprite.Sprite):
                 elif self.direcao == 'baixo':
                     self.direcao = 'direita'
 
+            if passo == 'pegar encomenda':
+                pygame.sprite.spritecollide(self, self.grupos['encomendas'], True)
+
+            if passo == 'entregar encomenda':
+                pygame.sprite.spritecollide(self, self.grupos['clientes'], True)
+
             del self.caminho[0]
 
             mapa[1] = [self.rect.y / TAMANHO_BLOCO + 1, self.rect.x / TAMANHO_BLOCO + 1]
-            print(mapa[1])
 
             if len(self.caminho) == 0:
                 self.caminho = None 
@@ -90,6 +112,7 @@ class Cliente(pygame.sprite.Sprite):
         self.rect.y = (pos[0] - 1) * TAMANHO_BLOCO
         self.grupos = grupos
         self.grupos['all_sprites'].add(self)
+        self.grupos['clientes'].add(self)
 
 class Encomenda(pygame.sprite.Sprite):
 
@@ -103,6 +126,7 @@ class Encomenda(pygame.sprite.Sprite):
         self.rect.y = (pos[0] - 1) * TAMANHO_BLOCO
         self.grupos = grupos
         self.grupos['all_sprites'].add(self)
+        self.grupos['encomendas'].add(self)
     
 
 pygame.init()
@@ -113,7 +137,10 @@ FPS = 60  # Frames per Second
 BLACK = (0, 0, 0)
 WHITE = (255,255,255)
 
-grupos = {'all_sprites': pygame.sprite.Group()}
+grupos = {'all_sprites': pygame.sprite.Group(),
+          'entregadores': pygame.sprite.Group(),
+          'encomendas': pygame.sprite.Group(),
+          'clientes': pygame.sprite.Group()}
 nome_mapa = 'Mapa1.json'
 
 with open(nome_mapa, 'r') as arquivo:
@@ -145,7 +172,7 @@ while rodando:
     # Controlar frame rate
     clock.tick(FPS)
 
-    if t >= 1:
+    if t >= 0.5:
         grupos['all_sprites'].update()
         t = 0
 
