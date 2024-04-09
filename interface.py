@@ -158,7 +158,7 @@ for encomenda in mapa[3]:
     Encomenda(encomenda, grupos)
 
 # Tamanho da tela e definição do FPS
-screen = pygame.display.set_mode((tamanho_mapa[1] * TAMANHO_BLOCO, tamanho_mapa[0] * TAMANHO_BLOCO))
+screen = pygame.display.set_mode(((tamanho_mapa[1] * TAMANHO_BLOCO) + 2 * TAMANHO_BLOCO, tamanho_mapa[0] * TAMANHO_BLOCO))
 clock = pygame.time.Clock()
 t = 0
 
@@ -190,6 +190,23 @@ while rodando:
     #Desenhar os obstaculos
     for pos in mapa[4]:
         pygame.draw.rect(screen, WHITE, pygame.Rect((pos[1] - 1) * TAMANHO_BLOCO, (pos[0] - 1) * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO))
+
+    num_clientes = len(grupos['clientes'])
+    num_encomendas = len(grupos['encomendas'])
+    num_entregadores = len(grupos['entregadores'])
+
+    font = pygame.font.Font(None, 16)
+    text_clientes = font.render("Clientes: {}".format(num_clientes), True, WHITE)
+    text_encomendas = font.render("Encomendas: {}".format(num_encomendas), True, WHITE)
+    text_entregadores = font.render("Entregadores: {}".format(num_entregadores), True, WHITE)
+    
+    screen.blit(text_clientes, ((tamanho_mapa[1] * TAMANHO_BLOCO) + 5, 15))
+    screen.blit(text_encomendas, ((tamanho_mapa[1] * TAMANHO_BLOCO) + 5, 65))
+    screen.blit(text_entregadores, ((tamanho_mapa[1] * TAMANHO_BLOCO) + 5, 115))
+
+    if num_clientes == 0:
+        imagem = pygame.transform.scale(pygame.image.load('assets/balloon-yesss.png'), (150, 81))
+        screen.blit(imagem, ((tamanho_mapa[1] * TAMANHO_BLOCO) - 25, 145))
 
     grupos['all_sprites'].draw(screen)
 
