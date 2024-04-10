@@ -195,21 +195,21 @@ while menu:
                     if mouse_x < 8 * TAMANHO_BLOCO and mouse_y < 6 * TAMANHO_BLOCO:
                         if momento == 1:
                             pygame.draw.rect(screen, WHITE, pygame.Rect(x * TAMANHO_BLOCO, y * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO))
-                            obstaculos.append([x, y])
+                            obstaculos.append([y+1, x+1])
                         elif momento == 2:
                             image = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
-                            encomendas.append([x, y])
+                            encomendas.append([y+1, x+1])
                         elif momento == 3:
                             image = pygame.transform.scale(pygame.image.load('assets/pessoa.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
-                            clientes.append([[x, y], contador_cliente])
+                            clientes.append([[y+1, x+1], contador_cliente])
                             contador_cliente += 1
                         else:
                             image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
-                            entregador.append(x)
-                            entregador.append(y)
+                            entregador.append(y+1)
+                            entregador.append(x+1)
 
             # Draw the grid for map creation
             for i in range(6):
@@ -253,7 +253,7 @@ else:
 tamanho_mapa = mapa[0]
 
 #x é a coluna e y é a linha
-entregador = Deliveryman(mapa[1][1], mapa[1][0], grupos)
+entregador = Deliveryman(mapa[1][1] , mapa[1][0], grupos)
 
 for cliente in mapa[2]:
     Cliente(cliente[0], grupos)
