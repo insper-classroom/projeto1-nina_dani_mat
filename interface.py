@@ -36,7 +36,7 @@ class Deliveryman(pygame.sprite.Sprite):
             self.image = self.imagem_baixo
 
         if self.caminho == None:
-            if len(mapa[2]) != 0:
+            if len(mapa[2]) != 0 and len(mapa[3]) != 0:
                 self.solucao = Solucao(mapa)
                 threading.Thread(target=self.solucao.run())
                 self.caminho = self.solucao.resultados[self.solucao.indice][0].split(';')
@@ -131,16 +131,17 @@ class Encomenda(pygame.sprite.Sprite):
 pygame.init()
 
 #constantes
-TAMANHO_BLOCO = 50
+TAMANHO_BLOCO = 26
 FPS = 60  # Frames per Second
 BLACK = (0, 0, 0)
 WHITE = (255,255,255)
+VERMELHO = (255,0,0)
 
-screen = pygame.display.set_mode(((9 * TAMANHO_BLOCO), 7 * TAMANHO_BLOCO))
 font = pygame.font.Font(None, 36)
 text_novo = font.render("criar novo mapa", True, WHITE)
 text_existente = font.render("usar mapa existente", True, WHITE)
 criar = False
+screen = pygame.display.set_mode(((text_existente.get_width()), text_novo.get_height() + text_existente.get_height()))
 
 menu = True
 texto_menu = True
@@ -150,23 +151,26 @@ while menu:
             menu = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            if text_novo.get_rect(x=100, y=200).collidepoint(mouse_x, mouse_y):
+            if text_novo.get_rect(x=0, y=0).collidepoint(mouse_x, mouse_y):
                 criar = True
                 texto_menu = False
-            elif text_existente.get_rect(x=100, y=250).collidepoint(mouse_x, mouse_y):
+            elif text_existente.get_rect(x=0, y=text_novo.get_height()).collidepoint(mouse_x, mouse_y):
                 menu = False
 
     screen.fill(BLACK)
     if texto_menu:
-        screen.blit(text_novo, (100, 200))
-        screen.blit(text_existente, (100, 250))
+        screen.blit(text_novo, (0, 0))
+        screen.blit(text_existente, (0, text_novo.get_height()))
 
     pygame.display.update()
 
     if criar:
+        linhas = 10
+        colunas = 10
+        screen = pygame.display.set_mode((colunas * TAMANHO_BLOCO + TAMANHO_BLOCO, linhas * TAMANHO_BLOCO))
         criando = True
         momento = 1
-        novo_mapa = [[6, 8]]
+        novo_mapa = [[linhas, colunas]]
         entregador = []
         clientes = []
         encomendas = []
@@ -179,20 +183,29 @@ while menu:
                     menu = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
-                    proximo_rect = pygame.Rect(250, 310, proximo.get_width(), proximo.get_height())
+                    proximo_rect = pygame.Rect(colunas * TAMANHO_BLOCO, 0, proximo.get_width(), proximo.get_height())
                     if proximo_rect.collidepoint(mouse_x, mouse_y):
-                        momento += 1
-                        if momento >= 5:
-                            novo_mapa.append(entregador)
-                            novo_mapa.append(clientes)
-                            novo_mapa.append(encomendas)
-                            novo_mapa.append(obstaculos)
-                            criando = False
-                            menu = False
+                        momento = 5
+                    elif image_entregador.get_rect(x=colunas * TAMANHO_BLOCO, y=proximo.get_height()).collidepoint(mouse_x, mouse_y):
+                        momento = 4
+                    elif image_cliente.get_rect(x=colunas * TAMANHO_BLOCO, y=2 * TAMANHO_BLOCO).collidepoint(mouse_x, mouse_y):
+                        momento = 3
+                    elif image_encomenda.get_rect(x=colunas * TAMANHO_BLOCO, y=3 * TAMANHO_BLOCO).collidepoint(mouse_x, mouse_y):
+                        momento = 2
+                    elif pygame.rect.Rect(colunas * TAMANHO_BLOCO, 4 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO).collidepoint(mouse_x, mouse_y):
+                        momento = 1
+
+                    if momento >= 5:
+                        novo_mapa.append(entregador)
+                        novo_mapa.append(clientes)
+                        novo_mapa.append(encomendas)
+                        novo_mapa.append(obstaculos)
+                        criando = False
+                        menu = False
 
                     x = mouse_x // TAMANHO_BLOCO
                     y = mouse_y // TAMANHO_BLOCO
-                    if mouse_x < 8 * TAMANHO_BLOCO and mouse_y < 6 * TAMANHO_BLOCO:
+                    if mouse_x < colunas * TAMANHO_BLOCO and mouse_y < linhas * TAMANHO_BLOCO:
                         if momento == 1:
                             pygame.draw.rect(screen, WHITE, pygame.Rect(x * TAMANHO_BLOCO, y * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO))
                             obstaculos.append([y+1, x+1])
@@ -205,32 +218,47 @@ while menu:
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
                             clientes.append([[y+1, x+1], contador_cliente])
                             contador_cliente += 1
-                        else:
+                        elif momento == 4:
                             image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
                             entregador.append(y+1)
                             entregador.append(x+1)
 
             # Draw the grid for map creation
-            for i in range(6):
-                for j in range(8):
+            for i in range(linhas):
+                for j in range(colunas):
                     pygame.draw.rect(screen, WHITE, pygame.Rect(j * TAMANHO_BLOCO, i * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 1)
             
-            font = pygame.font.Font(None, 26)
+            font = pygame.font.Font(None, TAMANHO_BLOCO)
             text = font.render("", True, WHITE)
-            if momento == 1:
-                text = font.render("escolha os obstáculos", True, WHITE)
-            elif momento == 2:
-                text = font.render("escolha as encomendas", True, WHITE)
-            elif momento == 3:
-                text = font.render("escolha os clientes", True, WHITE)
-            else:
-                text = font.render("escolha o entregador", True, WHITE)
 
-            screen.fill(BLACK, (30, 310, screen.get_width() - 30, 20))
-            screen.blit(text, (30, 310))
-            proximo = font.render("próximo", True, WHITE)
-            screen.blit(proximo, (250, 310))
+            proximo = font.render("OK", True, WHITE)
+            screen.blit(proximo, (colunas * TAMANHO_BLOCO, 0))
+            
+            image_entregador = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+            screen.blit(image_entregador, (colunas * TAMANHO_BLOCO, proximo.get_height()))
+            pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, proximo.get_height(), TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
+            
+            image_cliente = pygame.transform.scale(pygame.image.load('assets/pessoa.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+            screen.blit(image_cliente, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO))
+            pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
+            
+            image_encomenda = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+            screen.blit(image_encomenda, (colunas * TAMANHO_BLOCO, 3 * TAMANHO_BLOCO))
+            pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, 3 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
+
+            pygame.draw.rect(screen, WHITE, (colunas * TAMANHO_BLOCO, 4 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO))
+            pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, 4 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 2)
+
+            if momento == 1:
+                pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 4 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
+            elif momento == 2:
+                pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 3 * TAMANHO_BLOCO, image_encomenda.get_width(), image_encomenda.get_height()), 3)
+            elif momento == 3:
+                pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO, image_cliente.get_width(), image_cliente.get_height()), 3)
+            elif momento == 4:
+                pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, proximo.get_height(), image_entregador.get_width(), image_entregador.get_height()), 3)
+            
 
             pygame.display.update()
 
@@ -239,7 +267,6 @@ grupos = {'all_sprites': pygame.sprite.Group(),
           'encomendas': pygame.sprite.Group(),
           'clientes': pygame.sprite.Group()}
 
-print(novo_mapa)
 if not criar:
     nome_mapa = 'Mapa1.json'
 
@@ -260,9 +287,19 @@ for encomenda in mapa[3]:
     Encomenda(encomenda, grupos)
 
 # Tamanho da tela e definição do FPS
-screen = pygame.display.set_mode(((tamanho_mapa[1] * TAMANHO_BLOCO) + 2 * TAMANHO_BLOCO, tamanho_mapa[0] * TAMANHO_BLOCO))
+screen = pygame.display.set_mode(((tamanho_mapa[1] * TAMANHO_BLOCO) + TAMANHO_BLOCO, tamanho_mapa[0] * TAMANHO_BLOCO))
 clock = pygame.time.Clock()
 t = 0
+contador_cliente = len(mapa[2])
+momento = 0
+colunas = tamanho_mapa[1]
+linhas = tamanho_mapa[0]
+# entregador = []
+clientes = []
+encomendas = []
+image_encomenda = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+image_cliente = pygame.transform.scale(pygame.image.load('assets/pessoa.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+image_entregador = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
 
 rodando = True
 while rodando:
@@ -270,6 +307,35 @@ while rodando:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             rodando = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            proximo_rect = pygame.Rect(colunas * TAMANHO_BLOCO, 0, proximo.get_width(), proximo.get_height())
+            if proximo_rect.collidepoint(mouse_x, mouse_y):
+                momento = 5
+            elif image_entregador.get_rect(x=colunas * TAMANHO_BLOCO, y=proximo.get_height()).collidepoint(mouse_x, mouse_y):
+                momento = 4
+            elif image_cliente.get_rect(x=colunas * TAMANHO_BLOCO, y=2 * TAMANHO_BLOCO).collidepoint(mouse_x, mouse_y):
+                momento = 3
+            elif image_encomenda.get_rect(x=colunas * TAMANHO_BLOCO, y=3 * TAMANHO_BLOCO).collidepoint(mouse_x, mouse_y):
+                momento = 2
+
+        x = mouse_x // TAMANHO_BLOCO
+        y = mouse_y // TAMANHO_BLOCO
+        if mouse_x < tamanho_mapa[1] * TAMANHO_BLOCO and mouse_y < tamanho_mapa[0] * TAMANHO_BLOCO:
+            if momento == 2:
+                image = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+                encomendas.append([y+1, x+1])
+                Encomenda([y+1, x+1], grupos)
+                momento = 0
+            elif momento == 3:
+                Cliente([y+1, x+1], grupos)
+                clientes.append([[y+1, x+1], contador_cliente])
+                contador_cliente += 1
+                momento = 0
+            # elif momento == 4:
+            #     image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+            #     screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
+            #     mapa[]
 
     # Controlar frame rate
     clock.tick(FPS)
@@ -293,22 +359,39 @@ while rodando:
     for pos in mapa[4]:
         pygame.draw.rect(screen, WHITE, pygame.Rect((pos[1] - 1) * TAMANHO_BLOCO, (pos[0] - 1) * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO))
 
-    num_clientes = len(grupos['clientes'])
-    num_encomendas = len(grupos['encomendas'])
-    num_entregadores = len(grupos['entregadores'])
+    font = pygame.font.Font(None, TAMANHO_BLOCO)
+    text = font.render("", True, WHITE)
 
-    font = pygame.font.Font(None, 16)
-    text_clientes = font.render("Clientes: {}".format(num_clientes), True, WHITE)
-    text_encomendas = font.render("Encomendas: {}".format(num_encomendas), True, WHITE)
-    text_entregadores = font.render("Entregadores: {}".format(num_entregadores), True, WHITE)
+    proximo = font.render("OK", True, WHITE)
+    screen.blit(proximo, (colunas * TAMANHO_BLOCO, 0))
     
-    screen.blit(text_clientes, ((tamanho_mapa[1] * TAMANHO_BLOCO) + 5, 15))
-    screen.blit(text_encomendas, ((tamanho_mapa[1] * TAMANHO_BLOCO) + 5, 65))
-    screen.blit(text_entregadores, ((tamanho_mapa[1] * TAMANHO_BLOCO) + 5, 115))
+    # image_entregador = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+    # screen.blit(image_entregador, (colunas * TAMANHO_BLOCO, proximo.get_height()))
+    # pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, proximo.get_height(), TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
+    
+    image_cliente = pygame.transform.scale(pygame.image.load('assets/pessoa.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+    screen.blit(image_cliente, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO))
+    pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
+    
+    image_encomenda = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+    screen.blit(image_encomenda, (colunas * TAMANHO_BLOCO, 3 * TAMANHO_BLOCO))
+    pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, 3 * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
 
-    if num_clientes == 0:
-        imagem = pygame.transform.scale(pygame.image.load('assets/balloon-yesss.png'), (150, 81))
-        screen.blit(imagem, ((tamanho_mapa[1] * TAMANHO_BLOCO) - 25, 145))
+    if momento == 2:
+        pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 3 * TAMANHO_BLOCO, image_encomenda.get_width(), image_encomenda.get_height()), 3)
+    elif momento == 3:
+        pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO, image_cliente.get_width(), image_cliente.get_height()), 3)
+    # elif momento == 4:
+    #     pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, proximo.get_height(), image_entregador.get_width(), image_entregador.get_height()), 3)
+    if momento == 5:
+        # novo_mapa.append(entregador)
+        for cliente in clientes:
+            mapa[2].append(cliente)
+        for encomenda in encomendas:
+            mapa[3].append(encomenda)
+        momento = 0
+        clientes = []
+        encomendas = []
 
     grupos['all_sprites'].draw(screen)
 

@@ -12,6 +12,7 @@ class Solucao:
         resultados = []
 
         for i in range(len(self.mapa[2])):  
+            print(self.mapa)
             state = Entregador("", self.mapa[0], self.mapa[1], self.mapa[2][i][0], self.mapa[3][i], self.mapa[4], "dir", False, False)
             algoritimo = AEstrela()
             result = algoritimo.search(state, trace=False, pruning="general")
