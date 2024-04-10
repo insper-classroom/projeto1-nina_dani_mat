@@ -5,7 +5,7 @@ from main import Solucao
 
 class Deliveryman(pygame.sprite.Sprite):
 
-    def __init__(self, x, y, grupos, nome_mapa) -> None:
+    def __init__(self, x, y, grupos) -> None:
         super().__init__()
         self.imagem_direita = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
         self.imagem_baixo = pygame.transform.rotate(self.imagem_direita, -90)
@@ -20,7 +20,6 @@ class Deliveryman(pygame.sprite.Sprite):
         self.grupos['all_sprites'].add(self)
         self.grupos['entregadores'].add(self)
         self.caminho = None
-        self.nome_mapa = nome_mapa
         self.direcao = 'direita'
 
     def update(self) -> None:
@@ -137,19 +136,124 @@ FPS = 60  # Frames per Second
 BLACK = (0, 0, 0)
 WHITE = (255,255,255)
 
+screen = pygame.display.set_mode(((9 * TAMANHO_BLOCO), 7 * TAMANHO_BLOCO))
+font = pygame.font.Font(None, 36)
+text_novo = font.render("criar novo mapa", True, WHITE)
+text_existente = font.render("usar mapa existente", True, WHITE)
+criar = False
+
+menu = True
+texto_menu = True
+while menu:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            menu = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if text_novo.get_rect(x=100, y=200).collidepoint(mouse_x, mouse_y):
+                criar = True
+                texto_menu = False
+            elif text_existente.get_rect(x=100, y=250).collidepoint(mouse_x, mouse_y):
+                menu = False
+
+    screen.fill(BLACK)
+    if texto_menu:
+        screen.blit(text_novo, (100, 200))
+        screen.blit(text_existente, (100, 250))
+
+    pygame.display.update()
+
+    if criar:
+        criando = True
+        momento = 1
+        novo_mapa = [[6, 8]]
+        entregador = []
+        clientes = []
+        encomendas = []
+        obstaculos = []
+        contador_cliente = 0
+        while criando:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    criando = False
+                    menu = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    proximo_rect = pygame.Rect(250, 310, proximo.get_width(), proximo.get_height())
+                    if proximo_rect.collidepoint(mouse_x, mouse_y):
+                        momento += 1
+                        if momento >= 5:
+                            novo_mapa.append(entregador)
+                            novo_mapa.append(clientes)
+                            novo_mapa.append(encomendas)
+                            novo_mapa.append(obstaculos)
+                            criando = False
+                            menu = False
+
+                    x = mouse_x // TAMANHO_BLOCO
+                    y = mouse_y // TAMANHO_BLOCO
+                    if mouse_x < 8 * TAMANHO_BLOCO and mouse_y < 6 * TAMANHO_BLOCO:
+                        if momento == 1:
+                            pygame.draw.rect(screen, WHITE, pygame.Rect(x * TAMANHO_BLOCO, y * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO))
+                            obstaculos.append([x, y])
+                        elif momento == 2:
+                            image = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+                            screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
+                            encomendas.append([x, y])
+                        elif momento == 3:
+                            image = pygame.transform.scale(pygame.image.load('assets/pessoa.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+                            screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
+                            clientes.append([[x, y], contador_cliente])
+                            contador_cliente += 1
+                        else:
+                            image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+                            screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
+                            entregador.append(x)
+                            entregador.append(y)
+
+            # Draw the grid for map creation
+            for i in range(6):
+                for j in range(8):
+                    pygame.draw.rect(screen, WHITE, pygame.Rect(j * TAMANHO_BLOCO, i * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO), 1)
+            
+            font = pygame.font.Font(None, 26)
+            text = font.render("", True, WHITE)
+            if momento == 1:
+                text = font.render("escolha os obstáculos", True, WHITE)
+
+            elif momento == 2:
+                text = font.render("escolha as encomendas", True, WHITE)
+            
+            elif momento == 3:
+                text = font.render("escolha os clientes", True, WHITE)
+
+            else:
+                text = font.render("escolha o entregador", True, WHITE)
+
+            screen.blit(text, (30, 310))
+            proximo = font.render("próximo", True, WHITE)
+            screen.blit(proximo, (250, 310))
+
+            pygame.display.update()
+
 grupos = {'all_sprites': pygame.sprite.Group(),
           'entregadores': pygame.sprite.Group(),
           'encomendas': pygame.sprite.Group(),
           'clientes': pygame.sprite.Group()}
-nome_mapa = 'Mapa1.json'
 
-with open(nome_mapa, 'r') as arquivo:
-    mapa = json.load(arquivo)
+print(novo_mapa)
+if not criar:
+    nome_mapa = 'Mapa1.json'
+
+    with open(nome_mapa, 'r') as arquivo:
+        mapa = json.load(arquivo)
+else:
+    mapa = novo_mapa
 
 tamanho_mapa = mapa[0]
 
 #x é a coluna e y é a linha
-entregador = Deliveryman(mapa[1][1], mapa[1][0], grupos, nome_mapa)
+entregador = Deliveryman(mapa[1][1], mapa[1][0], grupos)
 
 for cliente in mapa[2]:
     Cliente(cliente[0], grupos)
