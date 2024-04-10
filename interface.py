@@ -220,16 +220,14 @@ while menu:
             text = font.render("", True, WHITE)
             if momento == 1:
                 text = font.render("escolha os obstáculos", True, WHITE)
-
             elif momento == 2:
                 text = font.render("escolha as encomendas", True, WHITE)
-            
             elif momento == 3:
                 text = font.render("escolha os clientes", True, WHITE)
-
             else:
                 text = font.render("escolha o entregador", True, WHITE)
 
+            screen.fill(BLACK, (30, 310, screen.get_width() - 30, 20))
             screen.blit(text, (30, 310))
             proximo = font.render("próximo", True, WHITE)
             screen.blit(proximo, (250, 310))
