@@ -5,8 +5,9 @@ from main import Solucao
 
 class Deliveryman(pygame.sprite.Sprite):
 
-    def __init__(self, x, y, grupos) -> None:
+    def __init__(self, x, y, grupos, indice_entregador) -> None:
         super().__init__()
+        self.indice_entregador = indice_entregador
         self.imagem_direita = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
         self.imagem_baixo = pygame.transform.rotate(self.imagem_direita, -90)
         self.imagem_esquerda = pygame.transform.flip(self.imagem_direita, True, False)
@@ -37,10 +38,13 @@ class Deliveryman(pygame.sprite.Sprite):
 
         if self.caminho == None:
             if len(mapa[2]) != 0 and len(mapa[3]) != 0:
-                self.solucao = Solucao(mapa)
+                self.solucao = Solucao(mapa, self.indice_entregador)
                 threading.Thread(target=self.solucao.run())
-                self.caminho = self.solucao.resultados[self.solucao.indice][0].split(';')
+                self.caminho = self.solucao.resultados[self.solucao.indice]
+                if self.caminho != None:
+                    self.caminho = self.caminho[0].split(';')
         else:
+
             passo = self.caminho[0].strip()
 
             if passo == 'ir pra frente':
@@ -90,12 +94,12 @@ class Deliveryman(pygame.sprite.Sprite):
 
             del self.caminho[0]
 
-            mapa[1] = [self.rect.y / TAMANHO_BLOCO + 1, self.rect.x / TAMANHO_BLOCO + 1]
+            mapa[1][self.indice_entregador][0] = [self.rect.y / TAMANHO_BLOCO + 1, self.rect.x / TAMANHO_BLOCO + 1]
 
             if len(self.caminho) == 0:
                 self.caminho = None 
-                del mapa[2][self.solucao.indice]
-                del mapa[3][self.solucao.indice]
+                mapa[2].remove(self.solucao.resultados[self.solucao.indice][5])
+                mapa[3].remove(self.solucao.resultados[self.solucao.indice][6])
                 self.direcao = 'direita'
 
 
@@ -176,6 +180,7 @@ while menu:
         encomendas = []
         obstaculos = []
         contador_cliente = 0
+        contador_entregador = 0
         while criando:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -212,7 +217,7 @@ while menu:
                         elif momento == 2:
                             image = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
-                            encomendas.append([y+1, x+1])
+                            encomendas.append([[y+1, x+1], -1])
                         elif momento == 3:
                             image = pygame.transform.scale(pygame.image.load('assets/pessoa.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
@@ -221,8 +226,8 @@ while menu:
                         elif momento == 4:
                             image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
                             screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
-                            entregador.append(y+1)
-                            entregador.append(x+1)
+                            entregador.append([[y+1, x+1], contador_entregador])
+                            contador_entregador += 1
 
             # Draw the grid for map creation
             for i in range(linhas):
@@ -278,23 +283,25 @@ else:
 tamanho_mapa = mapa[0]
 
 #x é a coluna e y é a linha
-entregador = Deliveryman(mapa[1][1] , mapa[1][0], grupos)
+for entregador in mapa[1]:
+    Deliveryman(entregador[0][1] , entregador[0][0], grupos, mapa[1].index(entregador))
 
 for cliente in mapa[2]:
     Cliente(cliente[0], grupos)
 
 for encomenda in mapa[3]:
-    Encomenda(encomenda, grupos)
+    Encomenda(encomenda[0], grupos)
 
 # Tamanho da tela e definição do FPS
 screen = pygame.display.set_mode(((tamanho_mapa[1] * TAMANHO_BLOCO) + TAMANHO_BLOCO, tamanho_mapa[0] * TAMANHO_BLOCO))
 clock = pygame.time.Clock()
 t = 0
 contador_cliente = len(mapa[2])
+contador_entregador = len(mapa[1])
 momento = 0
 colunas = tamanho_mapa[1]
 linhas = tamanho_mapa[0]
-# entregador = []
+entregadores = []
 clientes = []
 encomendas = []
 image_encomenda = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
@@ -324,7 +331,7 @@ while rodando:
         if mouse_x < tamanho_mapa[1] * TAMANHO_BLOCO and mouse_y < tamanho_mapa[0] * TAMANHO_BLOCO:
             if momento == 2:
                 image = pygame.transform.scale(pygame.image.load('assets/encomenda.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
-                encomendas.append([y+1, x+1])
+                encomendas.append([[y+1, x+1], -1])
                 Encomenda([y+1, x+1], grupos)
                 momento = 0
             elif momento == 3:
@@ -332,10 +339,11 @@ while rodando:
                 clientes.append([[y+1, x+1], contador_cliente])
                 contador_cliente += 1
                 momento = 0
-            # elif momento == 4:
-            #     image = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
-            #     screen.blit(image, (x * TAMANHO_BLOCO, y * TAMANHO_BLOCO))
-            #     mapa[]
+            elif momento == 4:
+                Deliveryman(x+1, y+1, grupos, contador_entregador)
+                entregadores.append([[y+1, x+1], contador_entregador])
+                contador_entregador += 1
+                momento = 0
 
     # Controlar frame rate
     clock.tick(FPS)
@@ -365,9 +373,9 @@ while rodando:
     proximo = font.render("OK", True, WHITE)
     screen.blit(proximo, (colunas * TAMANHO_BLOCO, 0))
     
-    # image_entregador = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
-    # screen.blit(image_entregador, (colunas * TAMANHO_BLOCO, proximo.get_height()))
-    # pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, proximo.get_height(), TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
+    image_entregador = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
+    screen.blit(image_entregador, (colunas * TAMANHO_BLOCO, proximo.get_height()))
+    pygame.draw.rect(screen, BLACK, (colunas * TAMANHO_BLOCO, proximo.get_height(), TAMANHO_BLOCO, TAMANHO_BLOCO), 3)
     
     image_cliente = pygame.transform.scale(pygame.image.load('assets/pessoa.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
     screen.blit(image_cliente, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO))
@@ -381,10 +389,11 @@ while rodando:
         pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 3 * TAMANHO_BLOCO, image_encomenda.get_width(), image_encomenda.get_height()), 3)
     elif momento == 3:
         pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO, image_cliente.get_width(), image_cliente.get_height()), 3)
-    # elif momento == 4:
-    #     pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, proximo.get_height(), image_entregador.get_width(), image_entregador.get_height()), 3)
+    elif momento == 4:
+        pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, proximo.get_height(), image_entregador.get_width(), image_entregador.get_height()), 3)
     if momento == 5:
-        # novo_mapa.append(entregador)
+        for entregador in entregadores:
+            mapa[1].append(entregador)
         for cliente in clientes:
             mapa[2].append(cliente)
         for encomenda in encomendas:
@@ -392,6 +401,7 @@ while rodando:
         momento = 0
         clientes = []
         encomendas = []
+        entregadores = []
 
     grupos['all_sprites'].draw(screen)
 
