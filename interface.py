@@ -316,10 +316,10 @@ while rodando:
             rodando = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            proximo_rect = pygame.Rect(colunas * TAMANHO_BLOCO, 0, proximo.get_width(), proximo.get_height())
-            if proximo_rect.collidepoint(mouse_x, mouse_y):
-                momento = 5
-            elif image_entregador.get_rect(x=colunas * TAMANHO_BLOCO, y=proximo.get_height()).collidepoint(mouse_x, mouse_y):
+            # proximo_rect = pygame.Rect(colunas * TAMANHO_BLOCO, 0, proximo.get_width(), proximo.get_height())
+            # if proximo_rect.collidepoint(mouse_x, mouse_y):
+            #     momento = 5
+            if image_entregador.get_rect(x=colunas * TAMANHO_BLOCO, y=proximo.get_height()).collidepoint(mouse_x, mouse_y):
                 momento = 4
             elif image_cliente.get_rect(x=colunas * TAMANHO_BLOCO, y=2 * TAMANHO_BLOCO).collidepoint(mouse_x, mouse_y):
                 momento = 3
@@ -340,8 +340,8 @@ while rodando:
                 contador_cliente += 1
                 momento = 0
             elif momento == 4:
+                mapa[1].append([[y+1, x+1], contador_entregador])
                 Deliveryman(x+1, y+1, grupos, contador_entregador)
-                entregadores.append([[y+1, x+1], contador_entregador])
                 contador_entregador += 1
                 momento = 0
 
@@ -366,12 +366,6 @@ while rodando:
     #Desenhar os obstaculos
     for pos in mapa[4]:
         pygame.draw.rect(screen, WHITE, pygame.Rect((pos[1] - 1) * TAMANHO_BLOCO, (pos[0] - 1) * TAMANHO_BLOCO, TAMANHO_BLOCO, TAMANHO_BLOCO))
-
-    font = pygame.font.Font(None, TAMANHO_BLOCO)
-    text = font.render("", True, WHITE)
-
-    proximo = font.render("OK", True, WHITE)
-    screen.blit(proximo, (colunas * TAMANHO_BLOCO, 0))
     
     image_entregador = pygame.transform.scale(pygame.image.load('assets/entregador.webp'), (TAMANHO_BLOCO,TAMANHO_BLOCO))
     screen.blit(image_entregador, (colunas * TAMANHO_BLOCO, proximo.get_height()))
@@ -391,9 +385,9 @@ while rodando:
         pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, 2 * TAMANHO_BLOCO, image_cliente.get_width(), image_cliente.get_height()), 3)
     elif momento == 4:
         pygame.draw.rect(screen, VERMELHO, (colunas * TAMANHO_BLOCO, proximo.get_height(), image_entregador.get_width(), image_entregador.get_height()), 3)
-    if momento == 5:
-        for entregador in entregadores:
-            mapa[1].append(entregador)
+    if len(clientes) == len(encomendas) and len(clientes) != 0:
+        # for entregador in entregadores:
+        #     mapa[1].append(entregador)
         for cliente in clientes:
             mapa[2].append(cliente)
         for encomenda in encomendas:
